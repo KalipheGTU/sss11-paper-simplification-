@@ -5,12 +5,33 @@
 
 -- create link layer
 
-WITH cleared_features AS (SELECT axial.id AS axial_id, rcl.id AS rcl_id , axial.geom AS axial_geom, rcl.geom AS rcl_geom
-                          FROM axial_map_m25 AS axial , open_roads_london AS rcl
-                          WHERE ST_DWithin(ST_Centroid(axial.geom), rcl.geom, 10)
-                          OR
-                           ST_DWithin(ST_Centroid(rcl.geom), axial.geom, 10)
-                          OR
-                          (rcl.geom&&axial.geom AND ST_Length(axial.geom) > 15 AND ST_Length(rcl.geom) > 15))
-SELECT DISTINCT ON (axial_id) axial_id, axial_geom
-FROM cleared_features;
+CREATE TABLE sss11_simplification.axial_rcl_links(
+  id serial NOT NULL,
+  id_axial integer,
+  id_rcl integer,
+  geom geometry(LINESTRING,27700),
+  CONSTRAINT axial_rcl_links_pk PRIMARY KEY(id)
+)
+
+ALTER TABLE sss11_simplification.axial_rcl_links OWNER TO postgres;
+
+CREATE INDEX axial_rcl_links_gist ON sss11_simplification.axial_rcl_links USING gist(geom);
+
+
+
+SELECT ST_MakeLine(ST_Centroid(axial.geom), ST_Centroid(rcl.geom))
+FROM sss11_simplification.axial_map_m25 AS axial , sss11_simplification.open_roads_london AS rcl
+WHERE ST_Intersects(axial.geom,rcl.geom) OR ST_DWithin(rcl.geom, axial.geom, 10)
+
+CREATE TABLE t_intersect AS
+SELECT
+  hp.gid,
+  hp.st_address,
+  hp.city,
+  hp.st_num,
+  hp.the_geom
+FROM
+  public.housepoints AS hp LEFT JOIN
+  public.parcel AS par ON
+  ST_Intersects(hp.the_geom,par.the_geom)
+WHERE par.gid IS NULL;
