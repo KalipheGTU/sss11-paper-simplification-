@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS sss11.osm_intersections;
 CREATE TABLE sss11.osm_intersections(id serial, geom geometry(POINT,27700));
 
 ALTER TABLE sss11.osm_intersections ADD PRIMARY KEY(id);
