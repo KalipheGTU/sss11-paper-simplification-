@@ -184,7 +184,7 @@ class sGraph(QObject):
 
 	def to_dual_shp(self,path, crs, name, encoding, geom_type):
 		midpoints = { i[0]: pl_midpoint(QgsGeometry.fromWkt(i[2])) for i in self.features}
-		layer_fields = [QgsField('id', QVariant.Int), QgsField('source', QVariant.String), QgsField('target', QVariant.String), QgsField('angle', QVariant.Int)]
+		layer_fields = [QgsField('id', QVariant.Int), QgsField('l1', QVariant.Double), QgsField('l2', QVariant.Double), QgsField('source', QVariant.String), QgsField('target', QVariant.String), QgsField('angle', QVariant.Int)]
 		if path is None:
 			self.dual_network = QgsVectorLayer('LineString?crs=' + crs.toWkt(), name, "memory")
 		else:
@@ -204,7 +204,9 @@ class sGraph(QObject):
 		for k,v in self.dual_edges.items():
 			new_feat = QgsFeature()
 			new_feat.setFeatureId(count)
-			new_feat.setAttributes([count, str(k[0]), str(k[1]),v['angle']])
+			l1 = QgsGeometry.fromWkt(self.f_dict[k[0]][1]).length()
+			l2 = QgsGeometry.fromWkt(self.f_dict[k[1]][1]).length()
+			new_feat.setAttributes([count, l1, l2,  str(k[0]), str(k[1]),v['angle']])
 			count += 1
 			midpoint0 = midpoints[k[0]]
 			midpoint1 = midpoints[k[1]]
