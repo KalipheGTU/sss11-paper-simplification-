@@ -1,0 +1,147 @@
+-- make new cleared tables
+-- remove connections that do not exist in one or the other map
+-- make new axial_cleared
+-- make new rcl_cleared
+
+-- create link layer
+
+DROP TABLE IF EXISTS sss11_links.os_axial_links;
+CREATE TABLE sss11_links.os_axial_links(
+  id serial NOT NULL,
+  rcl_id integer,
+  axial_ids integer[],
+  axial_count integer,
+  rcl_length double precision,
+  sum_axial_length double precision,
+	choice800 integer,
+	choice1200 integer,
+	choice2000 integer,
+	choice3200 integer,
+	choice5000 integer,
+	choicen integer,
+	td800 double precision,
+	td1200 double precision,
+	td2000 double precision,
+  td3200 double precision,
+	td5000 double precision,
+	tdn double precision,
+  sum_choice800 integer,
+	sum_choice1200 integer,
+	sum_choice2000 integer,
+	sum_choice3200 integer,
+	sum_choice5000 integer,
+	sum_choicen integer,
+	sum_td800 double precision,
+	sum_td1200 double precision,
+	sum_td2000 double precision,
+  sum_td3200 double precision,
+	sum_td5000 double precision,
+	sum_tdn double precision,
+  nc800 integer,
+  nc1200 integer,
+  nc2000 integer,
+  nc3200 integer,
+  nc5000 integer,
+  ncn integer,
+  avg_nc800 double precision,
+  avg_nc1200 double precision,
+  avg_nc2000 double precision,
+  avg_nc3200 double precision,
+  avg_nc5000 double precision,
+  avg_ncn double precision,
+  geom geometry(LINESTRING,27700),
+  CONSTRAINT os_axial_links_pk PRIMARY KEY(id)
+);
+
+ALTER TABLE sss11_links.os_axial_links OWNER TO postgres;
+CREATE INDEX os_axial_links_gist ON sss11_links.os_axial_links USING gist(geom);
+
+TRUNCATE sss11_links.os_axial_links CASCADE;
+
+-- where the buffer of the bounding box intersects an axial line, ang angle approx. same and distance between midpoint and line < 15
+WITH links AS (SELECT rcl.id AS rcl_id, axial.id AS axial_id, ST_Length(rcl.geom) AS rcl_length, ST_Length(axial.geom) AS axial_length,
+                      rcl."T1024_Choice_R800_metric" AS rcl_ch800,
+                      rcl."T1024_Choice_R1200_metric" AS rcl_ch1200,
+                      rcl."T1024_Choice_R2000_metric" AS rcl_ch2000,
+                      rcl."T1024_Choice_R3200_metric" AS rcl_ch3200,
+                      rcl."T1024_Choice_R5000_metric" AS rcl_ch5000,
+                      rcl."T1024_Choice" AS rcl_chn,
+                      rcl."T1024_Total_Depth_R800_metric" AS rcl_td800,
+                      rcl."T1024_Total_Depth_R1200_metric" AS rcl_td1200,
+                      rcl."T1024_Total_Depth_R2000_metric" AS rcl_td2000,
+                      rcl."T1024_Total_Depth_R3200_metric" AS rcl_td3200,
+                      rcl."T1024_Total_Depth_R5000_metric" AS rcl_td5000,
+                      rcl."T1024_Total_Depth" AS rcl_tdn,
+                      rcl."T1024_Node_Count_R800_metric" AS rcl_nc800,
+                      rcl."T1024_Node_Count_R1200_metric" AS rcl_nc1200,
+                      rcl."T1024_Node_Count_R2000_metric" AS rcl_nc2000,
+                      rcl."T1024_Node_Count_R3200_metric" AS rcl_nc3200,
+                      rcl."T1024_Node_Count_R5000_metric" AS rcl_nc5000,
+                      rcl."T1024_Node_Count" AS rcl_ncn,
+
+                      axial."T1024_Choice_R800_metric" AS axial_ch800,
+                      axial."T1024_Choice_R1200_metric" AS axial_ch1200,
+                      axial."T1024_Choice_R2000_metric" AS axial_ch2000,
+                      axial."T1024_Choice_R3200_metric" AS axial_ch3200,
+                      axial."T1024_Choice_R5000_metric" AS axial_ch5000,
+                      axial."T1024_Choice" AS axial_chn,
+                      axial."T1024_Total_Depth_R800_metric" AS axial_td800,
+                      axial."T1024_Total_Depth_R1200_metric" AS axial_td1200,
+                      axial."T1024_Total_Depth_R2000_metric" AS axial_td2000,
+                      axial."T1024_Total_Depth_R3200_metric" AS axial_td3200,
+                      axial."T1024_Total_Depth_R5000_metric" AS axial_td5000,
+                      axial."T1024_Total_Depth" AS axial_tdn,
+                      axial."T1024_Node_Count_R800_metric" AS axial_nc800,
+                      axial."T1024_Node_Count_R1200_metric" AS axial_nc1200,
+                      axial."T1024_Node_Count_R2000_metric" AS axial_nc2000,
+                      axial."T1024_Node_Count_R3200_metric" AS axial_nc3200,
+                      axial."T1024_Node_Count_R5000_metric" AS axial_nc5000,
+                      axial."T1024_Node_Count" AS axial_ncn,
+                      ST_ShortestLine(ST_Line_Interpolate_Point(rcl.geom, 0.5), axial.geom) AS geom
+              FROM sss11_simpl.axial_p AS axial , sss11_simpl.os_p AS rcl
+              WHERE ST_Expand(rcl.geom,15)&&axial.geom
+                    AND abs(ST_Azimuth(ST_StartPoint(axial.geom), ST_EndPoint(axial.geom)) - ST_Azimuth(ST_StartPoint(rcl.geom),ST_Endpoint(rcl.geom))) < 0.25
+                    AND ST_Length(ST_ShortestLine(ST_Line_Interpolate_Point(rcl.geom, 0.5), axial.geom)) < 15)
+INSERT INTO sss11_links.os_axial_links(rcl_id, axial_ids, axial_count, rcl_length, sum_axial_length,
+                                  choice800,
+                                  choice1200,
+                                  choice2000,
+                                  choice3200,
+                                  choice5000,
+                                  choicen,
+                                  td800,
+                                  td1200,
+                                  td2000,
+                                  td3200,
+                                  td5000,
+                                  tdn,
+                                  nc800,
+                                  nc1200,
+                                  nc2000,
+                                  nc3200,
+                                  nc5000,
+                                  ncn,
+                                  sum_choice800,
+                                  sum_choice1200,
+                                  sum_choice2000,
+                                  sum_choice3200,
+                                  sum_choice5000,
+                                  sum_choicen,
+                                  sum_td800,
+                                  sum_td1200,
+                                  sum_td2000,
+                                  sum_td3200,
+                                  sum_td5000,
+                                  sum_tdn,
+                                  avg_nc800,
+                                  avg_nc1200,
+                                  avg_nc2000,
+                                  avg_nc3200,
+                                  avg_nc5000,
+                                  avg_ncn, geom )
+SELECT rcl_id, array_agg(axial_id), array_length(array_agg(axial_id), 1), rcl_length, sum(axial_length),
+       rcl_ch800, rcl_ch1200, rcl_ch2000, rcl_ch3200, rcl_ch5000, rcl_chn, rcl_td800, rcl_td1200, rcl_td2000, rcl_td3200, rcl_td5000, rcl_tdn, rcl_nc800, rcl_nc1200, rcl_nc2000, rcl_nc3200, rcl_nc5000, rcl_ncn,
+       sum(axial_ch800), sum(axial_ch1200), sum(axial_ch2000), sum(axial_ch3200), sum(axial_ch5000), sum(axial_chn), sum(axial_td800), sum(axial_td1200), sum(axial_td2000), sum(axial_td3200), sum(axial_td5000), sum(axial_tdn), avg(axial_nc800), avg(axial_nc1200), avg(axial_nc2000), avg(axial_nc3200), avg(axial_nc5000), avg(axial_ncn),
+       geom
+FROM links
+GROUP BY rcl_id, rcl_length, rcl_ch800, rcl_ch1200, rcl_ch2000, rcl_ch3200, rcl_ch5000, rcl_chn, rcl_td800, rcl_td1200, rcl_td2000, rcl_td3200, rcl_td5000, rcl_tdn, rcl_nc800, rcl_nc1200, rcl_nc2000, rcl_nc3200, rcl_nc5000, rcl_ncn, geom

@@ -38,7 +38,9 @@ SELECT axial.id, rcl.id, ST_ShortestLine(ST_Line_Interpolate_Point(axial.geom, 0
 FROM axial_segment_map_m25 AS axial , london_ax_ex AS rcl
 WHERE ST_Expand(axial.geom,15)&&rcl.geom
       AND abs(ST_Azimuth(ST_StartPoint(rcl.geom), ST_EndPoint(rcl.geom)) - ST_Azimuth(ST_StartPoint(axial.geom),ST_Endpoint(axial.geom))) < 0.25
-      AND ST_Length(ST_ShortestLine(ST_Line_Interpolate_Point(axial.geom, 0.5), rcl.geom)) < 15;
+      AND ST_Length(ST_ShortestLine(ST_Line_Interpolate_Point(axial.geom, 0.5), rcl.geom)) < 15
+      AND ST_ShortestLine(ST_Line_Interpolate_Point(axial.geom, 0.5), rcl.geom) <> ST_MakeLine(ST_Line_Interpolate_Point(axial.geom, 0.5), ST_StartPoint(rcl.geom)
+      AND ST_ShortestLine(ST_Line_Interpolate_Point(axial.geom, 0.5), rcl.geom) <> ST_MakeLine(ST_Line_Interpolate_Point(axial.geom, 0.5), ST_EndPoint(rcl.geom);
 
 -- where the buffer of the bounding box intersects an axial line, ang angle approx. same and distance between midpoint and line < 15
 INSERT INTO public.rcl_axial_links(id_axial, id_rcl, geom)
@@ -46,4 +48,6 @@ SELECT rcl.id, axial.id, ST_ShortestLine(ST_Line_Interpolate_Point(rcl.geom, 0.5
 FROM axial_segment_map_m25 AS axial , london_ax_ex AS rcl
 WHERE ST_Expand(rcl.geom,15)&&axial.geom
       AND abs(ST_Azimuth(ST_StartPoint(axial.geom), ST_EndPoint(axial.geom)) - ST_Azimuth(ST_StartPoint(rcl.geom),ST_Endpoint(rcl.geom))) < 0.25
-      AND ST_Length(ST_ShortestLine(ST_Line_Interpolate_Point(rcl.geom, 0.5), axial.geom)) < 15;
+      AND ST_Length(ST_ShortestLine(ST_Line_Interpolate_Point(rcl.geom, 0.5), axial.geom)) < 15
+      AND ST_ShortestLine(ST_Line_Interpolate_Point(rcl.geom, 0.5), axial.geom) <> ST_MakeLine(ST_Line_Interpolate_Point(rcl.geom, 0.5), ST_StartPoint(axial.geom)
+      AND ST_ShortestLine(ST_Line_Interpolate_Point(rcl.geom, 0.5), axial.geom) <> ST_MakeLine(ST_Line_Interpolate_Point(rcl.geom, 0.5), ST_EndPoint(axial.geom);

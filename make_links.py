@@ -1,11 +1,15 @@
 
-layer_1_name =
-layer_2_name =
-link_layer_1_name =
-link_layer_2_name =
-link_layer_name =
+from PyQt4.QtCore import QVariant
+import csv
+
+
+layer_1_name = 'axial_p'
+layer_2_name = 'os_p'
+link_layer_1_name = 'axial_os_links'
+link_layer_2_name = 'os_axial_links'
+link_layer_name = 'axial_os_mm_links'
 path = None
-path_csv =
+path_csv = ''
 
 def getLayerByName(name):
 	layer = None
@@ -26,46 +30,49 @@ edges = []
 l1s = {}
 l2s = {}
 for i in link_layer_1.getFeatures():
-    edges.append(({'l1':i.attributes()[1]}, {'l2',i.attributes()[2])})
+    edges.append((('l1',i.attributes()[1]), ('l2',i.attributes()[2])))
 for i in link_layer_2.getFeatures():
-    edges.append(({'l2':i.attributes()[1]}, {'l1':i.attributes()[2]}))
+    edges.append((('l2',i.attributes()[1]), ('l1',i.attributes()[2])))
 
 
 for i in layer_1.getFeatures():
     l1s[i.attributes()[0]] = {'centroid': i.geometry().centroid(),
-							'choice800': i.attributes()['T1024_Choice_R800_metric'],
-							'choice1200': i.attributes()['T1024_Choice_R1200_metric'],
-							'choice2000': i.attributes()['T1024_Choice_R2000_metric'],
-							'choice3200': i.attributes()['T1024_Choice_R3200_metric'],
-							'choice5000': i.attributes()['T1024_Choice_R5000_metric'],
-							'choicen': i.attributes()['T1024_Choice'],
-							'td800': i.attributes()['T1024_Total_Depth_R800_metric'],
-							'td1200': i.attributes()['T1024_Total_Depth_R1200_metric'],
-							'td2000': i.attributes()['T1024_Total_Depth_R2000_metric'],
-							'td3200': i.attributes()['T1024_Total_Depth_R3200_metric'],
-							'td5000': i.attributes()['T1024_Total_Depth_R5000_metric'],
-							'tdn': i.attributes()['T1024_Total_Depth']
+							'choice800': i['T1024_Choice_R800_metric'],
+							'choice1200': i['T1024_Choice_R1200_metric'],
+							'choice2000': i['T1024_Choice_R2000_metric'],
+							'choice3200': i['T1024_Choice_R3200_metric'],
+							'choice5000': i['T1024_Choice_R5000_metric'],
+							'choicen': i['T1024_Choice'],
+							'td800': i['T1024_Total_Depth_R800_metric'],
+							'td1200': i['T1024_Total_Depth_R1200_metric'],
+							'td2000': i['T1024_Total_Depth_R2000_metric'],
+							'td3200': i['T1024_Total_Depth_R3200_metric'],
+							'td5000': i['T1024_Total_Depth_R5000_metric'],
+							'tdn': i['T1024_Total_Depth']
 							}
 for i in layer_2.getFeatures():
     l1s[i.attributes()[0]] = {'centroid': i.geometry().centroid(),
-							'choice800': i.attributes()['T1024_Choice_R800_metric'],
-							'choice1200': i.attributes()['T1024_Choice_R1200_metric'],
-							'choice2000': i.attributes()['T1024_Choice_R2000_metric'],
-							'choice3200': i.attributes()['T1024_Choice_R3200_metric'],
-							'choice5000': i.attributes()['T1024_Choice_R5000_metric'],
-							'choicen': i.attributes()['T1024_Choice'],
-							'td800': i.attributes()['T1024_Total_Depth_R800_metric'],
-							'td1200': i.attributes()['T1024_Total_Depth_R1200_metric'],
-							'td2000': i.attributes()['T1024_Total_Depth_R2000_metric'],
-							'td3200': i.attributes()['T1024_Total_Depth_R3200_metric'],
-							'td5000': i.attributes()['T1024_Total_Depth_R5000_metric'],
-							'tdn': i.attributes()['T1024_Total_Depth']
+							'choice800': i['T1024_Choice_R800_metric'],
+							'choice1200': i['T1024_Choice_R1200_metric'],
+							'choice2000': i['T1024_Choice_R2000_metric'],
+							'choice3200': i['T1024_Choice_R3200_metric'],
+							'choice5000': i['T1024_Choice_R5000_metric'],
+							'choicen': i['T1024_Choice'],
+							'td800': i['T1024_Total_Depth_R800_metric'],
+							'td1200': i['T1024_Total_Depth_R1200_metric'],
+							'td2000': i['T1024_Total_Depth_R2000_metric'],
+							'td3200': i['T1024_Total_Depth_R3200_metric'],
+							'td5000': i['T1024_Total_Depth_R5000_metric'],
+							'tdn': i['T1024_Total_Depth']
 							}
 
 g = nx.MultiGraph()
 g.add_edges_from(edges)
 
 new_fields = [QgsField('group_id',QVariant.Int), QgsField('type',QVariant.String), QgsField('id',QVariant.Int)]
+crs = layer_1.dataProvider().crs()
+encoding = layer_1.dataProvider().encoding()
+geom_type = layer_1.dataProvider().geometryType()
 if path is None:
     mm_rel = QgsVectorLayer('LineString?crs=' + crs.toWkt(), link_layer_name, "memory")
 else:
@@ -86,7 +93,7 @@ f = csv.writer(open(path_csv, "wb+"))
 col_names = ['ids_1', 'ids_2', 'choice800_agg1', 'choice800_agg2', 'choice1200_agg1', 'choice1200_agg2', 'choice2000_agg1', 'choice2000_agg2', 'choice3200_agg1', 'choice3200_agg2', 'choice5000_agg1', 'choice5000_agg2', 'choicen_agg1', 'choicen_agg2' /
 				             , 'td800_agg1', 'td800_agg2', 'td1200_agg1', 'td1200_agg2', 'td2000_agg1', 'td2000_agg2', 'td3200_agg1', 'td3200_agg2', 'td5000_agg1', 'td5000_agg2', 'tden_agg1', 'tdn_agg2']
 f.writerow(col_names)
-for i in g.connected_components():
+for i in connected_components(g):
     comp_key += 1
     all_centroids = []
     agg_l1_ids = []
