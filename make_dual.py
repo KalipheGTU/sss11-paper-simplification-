@@ -376,7 +376,7 @@ def to_short_shp(path, _short_edges, crs, name, encoding, geom_type):
 	short_network.commitChanges()
 	return short_network
 
-def get_3_points(geom0,geom1,polylines=False):
+def get_3_points(geom0,geom1,polylines=True):
 	inter_point = geom0.intersection(geom1)
 	if polylines:
 		vertex1 = geom0.asPolyline()[-2]

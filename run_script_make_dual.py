@@ -1,8 +1,8 @@
 # cleaning settings
-layer_name = 'os_simpl20_10'
+layer_name = 'osm_dp20_inter10'
 path = None
 tolerance =6
-user_id ='gid'
+user_id ='Gid'
 # project settings
 layer = getLayerByName(layer_name)
 crs = layer.dataProvider().crs()
@@ -16,7 +16,7 @@ geom_type = layer.dataProvider().geometryType()
 aR=sGraph(layer, tolerance, user_id, True)
 aR.prepare()
 aR.make_dual_edges()
-aR.to_dual_shp(None, crs, 'os_simpl20_10_dual', encoding, geom_type)
+aR.to_dual_shp(None, crs, 'osm_dp20_inter10_dual', encoding, geom_type)
 QgsMapLayerRegistry.instance().addMapLayer(aR.dual_network)
 
 threshold = 5
